@@ -2,7 +2,7 @@ import json
 import folium
 import polyline
 
-with open("route.json", "r") as f:
+with open("data/route.json", "r") as f:
     data = json.load(f)
 
 overview_polyline = data["routes"][0]["overview_polyline"]["points"]
@@ -29,5 +29,5 @@ folium.Marker(
 ).add_to(m)
 
 
-m.save("map.html")
+m.save("data/map.html")
 print("done: saved to map.html")
