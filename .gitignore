@@ -4,5 +4,11 @@ venv/
 #data files
 data/
 
+#environment variables
 .env
+
+#temporary during testing
 *.html
+
+#python cache files
+__pycache__/
