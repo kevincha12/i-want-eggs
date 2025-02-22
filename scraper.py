@@ -1,7 +1,10 @@
 from bs4 import BeautifulSoup
 import requests
 from playwright.sync_api import sync_playwright
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
 
 class Scraper:
     def __init__(self, url, lat, long):
@@ -12,25 +15,23 @@ class Scraper:
         self.lat = lat
         self.long = long
 
-    #static scraping using requests - works if page statically loads
-    def static_scrape(self):
-        headers = {'User-Agent': self.ua, "X-Geo-Location": f"{self.lat}; {self.long}"}
-        self.html = requests.get(self.url, headers=headers).text
-
-    #dynamic scraping using playwright - works if page dynamically loads
-    #but much much slower (ONLY USE IF STATIC DOESN'T WORK)
-    def dynamic_scrape(self):
+    #scraping using playwright - should work with proxies from oxylab :)
+    def scrape(self):
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            context = browser.new_context(user_agent=self.ua, geolocation={"latitude" : self.lat, 
-                                          "longitude": self.long}, permissions=["geolocation"]) 
+            browser = p.chromium.launch(headless=True, proxy={'server': os.getenv("PROXY_SERVER"), 
+                                                              'username': os.getenv("PROXY_USERNAME"), 
+                                                              'password': os.getenv("PROXY_PASSWORD")})
+            context = browser.new_context(user_agent=self.ua, geolocation={'latitude' : self.lat, 
+                                          'longitude': self.long}, permissions=['geolocation']) 
             page = context.new_page()
             page.goto(self.url)
+            #necessary to wait for the domcontent to load so we can try not to get this "Robot or Human?" stuff
+            page.wait_for_load_state('domcontentloaded')
             self.html = page.content()
 
     #read contents and actually receive the egg prices and stuff
     def read(self):
-        return BeautifulSoup(self.html, "html.parser")
+        return BeautifulSoup(self.html, 'html.parser')
 
 def main():
     #debugging to make sure this actually works :crying:
@@ -38,9 +39,9 @@ def main():
     lat = 38.0372329
     long = -78.5706529
     scraper = Scraper(url, lat, long)
-    scraper.dynamic_scrape()
-    with open ("output.html", "w") as f:
+    scraper.scrape()
+    with open ('output.html', 'w') as f:
         f.write(scraper.read().prettify())
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
