@@ -24,7 +24,7 @@ class Scraper:
             context = browser.new_context(user_agent=self.ua, geolocation={'latitude' : self.lat, 
                                           'longitude': self.long}, permissions=['geolocation']) 
             page = context.new_page()
-            page.goto(self.url)
+            page.goto(self.url, timeout=60000)
             #necessary to wait until all stuff has loaded :)
             page.wait_for_load_state('domcontentloaded', timeout=60000)
             self.html = page.content()

@@ -1,6 +1,8 @@
 import location_reference_creation as LRC
 from store import Store
 from scraper import Scraper
+import time
+import random
 
 class PriceFilter:
     def __init__(self):
@@ -8,14 +10,14 @@ class PriceFilter:
 
     def load_stores(self):
         all_stores = []
-        # target_list = self.load_target()
-        walmart_list = self.load_walmarts()
+        # target_list = self.__load_target()
+        walmart_list = self.__load_walmarts()
         # all_stores.extend(target_list)
         all_stores.extend(walmart_list)
         return all_stores
         
 
-    # def load_target(self):
+    # def __load_target(self):
     #     target_stores = []
     #     target_df = LRC.load_target_csvs()
     #     #again, super unoptimal but for now this is a good query to just enforce and load.
@@ -34,7 +36,7 @@ class PriceFilter:
     #         target_stores.append(Store(address, city, zipcode, longitude, latitude, eggs))
     #     return target_stores
 
-    def load_walmarts(self):
+    def __load_walmarts(self):
         walmart_stores = []
         walmart_df = LRC.load_walmart_csvs()
         #yeah it doesn't feel great but this is an optimized URI usage and then we just need to deal with long/lat so walmart picks up on the correct warehouse
@@ -45,8 +47,10 @@ class PriceFilter:
             zipcode = row['zip_code']
             longitude = row['longitude']
             latitude = row['latitude']
-            eggs = self.get_eggs(walmart_optimized_url, longitude, latitude)
+            eggs = self.get_eggs_walmart(walmart_optimized_url, longitude, latitude)
             walmart_stores.append(Store(address, city, zipcode, longitude, latitude, eggs))
+            #necessary 5-10 sec delay so that we don't get caught
+            time.sleep(random.uniform(5,10))
         return walmart_stores
     
     def get_eggs_walmart(self, url, store_long, store_lat):
