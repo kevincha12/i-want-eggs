@@ -1,6 +1,9 @@
 # i-want-eggs
 A basic egg price detector for the cheapest eggs in Virginia relative to gas prices.
 
+## How it works
+We used a Kaggle dataset for target and walmart locations. This part can be done with the google maps API, but due to time constraints a dataset was used to get location data. Then, we scrape using playwright to deal with dynamic loading, along with IP proxies from Oxylabs to get nearby grocery data. We spoof the geolocation of different walmarts and targets to get the egg prices from there. Then, using the google maps API, we calculate distance and calculate the cheapest eggs based on price + gas prices!
+
 ## Setup
 
 To get started using this codebase yourself, you'll need a couple things:
