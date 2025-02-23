@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import json
 from django.shortcuts import render
 from django.conf import settings
+import controller 
 
 load_dotenv()
 api_key = os.getenv("ROUTE_API_KEY")
@@ -33,6 +34,13 @@ def route_view(request):
         return render(request, "error.html", {"message": "Origin or mileage not provided."})
 
     destination = "40.730610,-73.935242"  # fixed destination
+
+
+
+
+
+
+
 
     endpoint = "https://maps.googleapis.com/maps/api/directions/json"
     params = {
@@ -73,8 +81,6 @@ def route_view(request):
 
     map_html = m._repr_html_()
 
-    # Now the mileage value is accessible as the variable `mileage`
-    # You can use it for further calculations later.
     print("Mileage received:", mileage)  # or perform additional processing
 
     return render(request, "map.html", {"map": map_html})
