@@ -1,5 +1,19 @@
-.env
-data/
+#ignore my virtual environment lol
 venv/
+
+#data files
+data/
+
+#environment variables
+.env
+
+#temporary during testing
+*.html
 *.json
+
+#python cache files
 __pycache__/
+
+#testing files
+testfiles/
+test*.py
