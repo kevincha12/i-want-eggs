@@ -13,8 +13,6 @@ params = {
     "key": api_key
 }
 
-# url = f'https://maps.googleapis.com/maps/api/distancematrix/json?destinations=New%20York%20City%2C%20NY&origins=Washington%2C%20DC%7CBoston&units=imperial&key={api_key}'
-# url = f'https://maps.googleapis.com/maps/api/directions/json?destination=40.730610,-73.935242&origin=40.712776,-74.005974&key={api_key}'
 response = requests.get(endpoint, params)
 if response.status_code == 200:
     data = response.json()
