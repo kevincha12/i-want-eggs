@@ -3,7 +3,7 @@ import requests
 import folium
 import polyline
 from dotenv import load_dotenv
-
+import json
 from django.shortcuts import render
 from django.conf import settings
 
@@ -28,7 +28,8 @@ def route_view(request):
     # Get the origin from the GET parameters (expected format: "lat,lng")
     origin = request.GET.get("origin")
     mileage = request.GET.get("mileage")
-    if not origin or not mileage:
+    gas_price = request.GET.get("gas_price")
+    if not origin or not mileage or not gas_price:
         return render(request, "error.html", {"message": "Origin or mileage not provided."})
 
     destination = "40.730610,-73.935242"  # fixed destination
@@ -43,8 +44,11 @@ def route_view(request):
 
     if response.status_code == 200:
         data = response.json()
+        # with open("output.json", "w") as file:
+        #     json.dump(data, file, indent=4) 
         try:
             overview_polyline = data["routes"][0]["overview_polyline"]["points"]
+            distance = data["routes"][0]["legs"][0]["distance"]["value"] #in meters
         except (KeyError, IndexError):
             return render(request, "error.html", {"message": "No route found for the given origin."})
     else:

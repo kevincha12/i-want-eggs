@@ -29,9 +29,10 @@
     // Check that both the coordinates and mileage are provided.
     function checkFields() {
       var mileage = document.getElementById("mileage").value;
+      var gasPrice = document.getElementById("gas_price").value;
       var btn = document.getElementById("routeButton");
       // Only enable the button if coordinates are set and mileage is non-empty.
-      if (selectedLat !== null && selectedLng !== null && mileage !== "") {
+      if (selectedLat !== null && selectedLng !== null && mileage !== "" && gasPrice !== "") {
           btn.disabled = false;
       } else {
           btn.disabled = true;
@@ -41,9 +42,10 @@
     // Called when the button is clicked.
     function redirectToRoute() {
       var mileage = document.getElementById("mileage").value;
-      if (selectedLat !== null && selectedLng !== null && mileage) {
+      var gasPrice = document.getElementById("gas_price").value;
+      if (selectedLat !== null && selectedLng !== null && mileage && gasPrice) {
         // Redirect to the route view with the origin and mileage as query parameters.
-        window.location.href = "/route/?origin=" + selectedLat + "," + selectedLng + "&mileage=" + mileage;
+        window.location.href = "/route/?origin=" + selectedLat + "," + selectedLng + "&mileage=" + mileage + "&gas_price=" + gasPrice;
       } else {
         alert("Please fill in all fields.");
       }
@@ -54,10 +56,12 @@
   </script>
 </head>
 <body>
-  <h3>Search for an Address</h3>
+  <h3>I want Eggs</h3>
   <input id="address" type="text" placeholder="Enter an address" style="width: 300px; height: 30px; font-size: 16px;">
   <br><br>
   <input id="mileage" type="number" placeholder="Enter mileage" style="width: 150px; height: 30px; font-size: 16px;" oninput="checkFields()">
+  <br><br>
+  <input id="gas_price" type="number" placeholder="Enter gas price" style="width: 150px; height: 30px; font-size: 16px;" oninput="checkFields()">
   <br><br>
   <button id="routeButton" onclick="redirectToRoute()" disabled>Get Route and View Map</button>
   <div id="coords" style="margin-top:20px; font-size:16px;"></div>
