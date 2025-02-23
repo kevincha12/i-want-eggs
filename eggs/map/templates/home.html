@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Search for a Route</title>
+  <!-- Load the Google Maps API with the Places library -->
+  <script src="https://maps.googleapis.com/maps/api/js?key={{ api_key }}&libraries=places"></script>
+  <script>
+    var selectedLat = null;
+    var selectedLng = null;
+
+    function initialize() {
+      var input = document.getElementById('address');
+      var autocomplete = new google.maps.places.Autocomplete(input, { types: ['geocode'] });
+      autocomplete.addListener('place_changed', function() {
+        var place = autocomplete.getPlace();
+        if (!place.geometry) {
+          console.log("No details available for input: '" + place.name + "'");
+          return;
+        }
+        selectedLat = place.geometry.location.lat();
+        selectedLng = place.geometry.location.lng();
+        console.log('Selected place:', place);
+        console.log('Latitude:', selectedLat, 'Longitude:', selectedLng);
+        checkFields(); // Check if both fields are filled
+      });
+    }
+
+    // Check that both the coordinates and mileage are provided.
+    function checkFields() {
+      var mileage = document.getElementById("mileage").value;
+      var gasPrice = document.getElementById("gas_price").value;
+      var btn = document.getElementById("routeButton");
+      // Only enable the button if coordinates are set and mileage is non-empty.
+      if (selectedLat !== null && selectedLng !== null && mileage !== "" && gasPrice !== "") {
+          btn.disabled = false;
+      } else {
+          btn.disabled = true;
+      }
+    }
+
+    // Called when the button is clicked.
+    function redirectToRoute() {
+      var mileage = document.getElementById("mileage").value;
+      var gasPrice = document.getElementById("gas_price").value;
+      if (selectedLat !== null && selectedLng !== null && mileage && gasPrice) {
+        // Redirect to the route view with the origin and mileage as query parameters.
+        window.location.href = "/route/?origin=" + selectedLat + "," + selectedLng + "&mileage=" + mileage + "&gas_price=" + gasPrice;
+      } else {
+        alert("Please fill in all fields.");
+      }
+    }
+
+    // Initialize autocomplete on window load.
+    google.maps.event.addDomListener(window, 'load', initialize);
+  </script>
+</head>
+<body>
+  <h3>I want Eggs</h3>
+  <input id="address" type="text" placeholder="Enter an address" style="width: 300px; height: 30px; font-size: 16px;">
+  <br><br>
+  <input id="mileage" type="number" placeholder="Enter mileage" style="width: 150px; height: 30px; font-size: 16px;" oninput="checkFields()">
+  <br><br>
+  <input id="gas_price" type="number" placeholder="Enter gas price" style="width: 150px; height: 30px; font-size: 16px;" oninput="checkFields()">
+  <br><br>
+  <button id="routeButton" onclick="redirectToRoute()" disabled>Get Route and View Map</button>
+  <div id="coords" style="margin-top:20px; font-size:16px;"></div>
+</body>
+</html>
