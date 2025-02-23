@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 import json
 from django.shortcuts import render
 from django.conf import settings
-import controller 
+from .controller import get_min_price_location_csv, read_csv
 
 load_dotenv()
 api_key = os.getenv("ROUTE_API_KEY")
@@ -28,15 +28,20 @@ def route_view(request):
     """
     # Get the origin from the GET parameters (expected format: "lat,lng")
     origin = request.GET.get("origin")
-    mileage = request.GET.get("mileage")
-    gas_price = request.GET.get("gas_price")
+    mileage = float(request.GET.get("mileage"))
+    gas_price = float(request.GET.get("gas_price"))
     if not origin or not mileage or not gas_price:
         return render(request, "error.html", {"message": "Origin or mileage not provided."})
 
-    destination = "40.730610,-73.935242"  # fixed destination
+    # destination = "40.730610,-73.935242"  # fixed destination
 
 
-
+    #info object should be [address, lat, lon, egg_price]
+    csv_path = os.path.join(os.path.dirname(__file__), 'stores.csv')
+    infos = read_csv(csv_path)
+    best_store = get_min_price_location_csv(origin, infos, mileage, gas_price)
+    destination = f"{best_store[2]},{best_store[1]}"
+    print(destination)
 
 
 
@@ -56,7 +61,7 @@ def route_view(request):
         #     json.dump(data, file, indent=4) 
         try:
             overview_polyline = data["routes"][0]["overview_polyline"]["points"]
-            distance = data["routes"][0]["legs"][0]["distance"]["value"] #in meters
+            # distance = data["routes"][0]["legs"][0]["distance"]["value"] #in meters
         except (KeyError, IndexError):
             return render(request, "error.html", {"message": "No route found for the given origin."})
     else:
@@ -75,7 +80,7 @@ def route_view(request):
     ).add_to(m)
     folium.Marker(
         location=[end_lat, end_lng],
-        popup="Finish",
+        popup=best_store[0],
         icon=folium.Icon(color="red")
     ).add_to(m)
 
