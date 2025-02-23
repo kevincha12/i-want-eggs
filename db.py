@@ -1,7 +1,7 @@
 import psycopg2
 import os
 from dotenv import load_dotenv
-from exception import ConnectionNotOpenError
+from exception import TransactionNotOpenError
 
 class DBHandler:
     
@@ -19,20 +19,26 @@ class DBHandler:
     def close_conn(self):
         self.conn.close()
 
+    def new_transaction(self):
+        self.curs = self.conn.cursor()
+
+    def close_transaction(self):
+        self.curs.close()
+
     def rollback(self):
-        if self.conn.closed:
-            raise ConnectionNotOpenError
+        if self.curs.closed:
+            raise TransactionNotOpenError
         self.conn.rollback()
 
     def commit(self):
-        if self.conn.closed:
-            raise ConnectionNotOpenError
+        if self.curs.closed:
+            raise TransactionNotOpenError
         self.conn.commit()
 
     def create_tables(self):
-        if self.conn.closed:
-            raise ConnectionNotOpenError
-        self.conn.execute('''
+        if self.curs.closed:
+            raise TransactionNotOpenError
+        self.curs.execute('''
                         CREATE TABLE IF NOT EXISTS stores (
                           id SERIAL PRIMARY KEY,
                           address VARCHAR UNIQUE,
@@ -42,104 +48,99 @@ class DBHandler:
                           latitude NUMERIC NOT NULL
                           )
                           ''')
-        self.conn.execute('''
+        self.curs.execute('''
                         CREATE TABLE IF NOT EXISTS eggs (
                           id SERIAL PRIMARY KEY,
                           name VARCHAR NOT NULL,
-                          price INTEGER NOT NULL
+                          price NUMERIC NOT NULL
                           )
                           ''')
-        self.conn.execute('''
+        self.curs.execute('''
                         CREATE TABLE IF NOT EXISTS store_egg_relation (
                           id SERIAL PRIMARY KEY,
                           store INTEGER NOT NULL,
                           egg INTEGER NOT NULL,
                           FOREIGN KEY (store) REFERENCES stores (id) ON DELETE CASCADE,
-                          FOREIGN KEY (egg) REFERENCES eggs (id) on ON DELETE CASCADE
+                          FOREIGN KEY (egg) REFERENCES eggs (id) ON DELETE CASCADE
                           )
                           ''')
 
     def drop_tables(self):
-        if self.conn.closed:
-            raise ConnectionNotOpenError
-        self.conn.execute('''
+        if self.curs.closed:
+            raise TransactionNotOpenError
+        self.curs.execute('''
                         DROP TABLE IF EXISTS stores, eggs, store_egg_relaton
                           ''')
     
     def add_store(self, address, city, zipcode, longitude, latitude):
-        if self.conn.closed:
-            raise ConnectionNotOpenError
-        curs = self.conn.execute('''
+        if self.curs.closed:
+            raise TransactionNotOpenError
+        self.curs.execute('''
                         INSERT INTO stores (address, city, zipcode, longitude, latitude)
-                          VALUES (%s, %s, %s, %f, %f)
+                          VALUES (%s, %s, %s, %s, %s)
                         RETURNING id
                           ''',
                         (address, city, zipcode, longitude, latitude)
                           )
-        store_pkey = curs.fetchone()[0]
-        curs.close()
+        store_pkey = self.curs.fetchone()[0]
         return store_pkey
         
         
     def add_egg(self, name, price):
-        if self.conn.closed:
-            raise ConnectionNotOpenError
-        curs = self.conn.execute('''
+        if self.curs.closed:
+            raise TransactionNotOpenError
+        self.curs.execute('''
                         INSERT INTO eggs (name, price)
-                          VALUES (%s, %f)
+                          VALUES (%s, %s)
                         RETURNING id
                           ''',
                         (name, price)
                           )
-        egg_pkey = curs.fetchone()[0]
-        curs.close()
+        egg_pkey = self.curs.fetchone()[0]
         return egg_pkey
     
     def add_store_egg_relation(self, store_pkey, egg_pkey):
-        if self.conn.closed:
-            raise ConnectionNotOpenError
-        self.conn.execute('''
+        if self.curs.closed:
+            raise TransactionNotOpenError
+        self.curs.execute('''
                         INSERT INTO store_egg_relation (store, egg)
-                          VALUES(%d, %d)
+                          VALUES(%s, %s)
                           ''',
                           (store_pkey, egg_pkey)
                           )
     
     def get_store_by_address(self, store_address):
-        if self.conn.closed:
-            raise ConnectionNotOpenError
-        curs = self.conn.execute('''
+        if self.curs.closed:
+            raise TransactionNotOpenError
+        self.curs.execute('''
                         SELECT * FROM stores
                           WHERE address = %s
                           ''',
                         (store_address,)
                           )
-        store = curs.fetchone()
-        curs.close()
+        store = self.curs.fetchone()
         return store
 
     def get_eggs_for_store(self, store_pkey):
-        if self.conn.closed:
-            raise ConnectionNotOpenError
-        curs = self.conn.execute('''
+        if self.curs.closed:
+            raise TransactionNotOpenError
+        self.curs.execute('''
                         SELECT eggs.* FROM eggs
                           INNER JOIN store_egg_relation ON eggs.id = store_egg_relation.egg
                           WHERE store = %s
                           ''',
                         (store_pkey,)
                           )
-        eggs = curs.fetchall()
-        curs.close()
+        eggs = self.curs.fetchall()
         return eggs
 
     def get_all_stores(self):
         #note that this does NOT get you enough for a store object, you MUST also
         #get the eggs for a given store :)
-        if self.conn.closed:
-            raise ConnectionNotOpenError
-        curs = self.conn.execute('''
+        if self.curs.closed:
+            raise TransactionNotOpenError
+        self.curs.execute('''
                         SELECT * FROM stores
                           ''')
-        stores = curs.fetchall()
-        curs.close()
+        stores = self.curs.fetchall()
         return stores
