@@ -50,7 +50,3 @@ class PriceFilter:
         instanced_scraper = Scraper(url, store_lat, store_long)
         instanced_scraper.scrape()
         return instanced_scraper.read_walmart()
-
-if __name__ == '__main__':
-    pf = PriceFilter()
-    print(pf.stores)

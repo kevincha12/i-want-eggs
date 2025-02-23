@@ -12,3 +12,7 @@ data/
 
 #python cache files
 __pycache__/
+
+#testing files
+testfiles/
+test*.py

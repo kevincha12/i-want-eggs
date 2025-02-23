@@ -3,7 +3,6 @@ import requests
 from playwright.sync_api import sync_playwright
 import os
 from dotenv import load_dotenv
-import re
 
 load_dotenv()
 
@@ -33,11 +32,13 @@ class Scraper:
     #read contents and actually receive the egg prices and stuff
     def read_walmart(self):
         soup = BeautifulSoup(self.html, 'html.parser')
+        #from manually looking it looks like walmart stores their products as classtype w_iUH7?
         spans = soup.find_all('span', class_='w_iUH7')
         filter = [span.getText(strip=True) for span in spans if "egg" in span.text.lower() or "current price" in span.text.lower()]
         eggs = {}
         entry_ind = 0
         #there should always be a product - price pair, so we can divide by 2
+        #seems like an unoptimal method but it works
         while entry_ind < int(len(filter)/2):
             product_name = filter[entry_ind]
             price = float(filter[entry_ind+1].split('current price $')[1])
@@ -47,18 +48,3 @@ class Scraper:
     
     def return_soup(self):
         return BeautifulSoup(self.html, 'html.parser')
-
-
-def main():
-    #debugging to make sure this actually works :crying:
-    url = 'https://www.walmart.com/search?q=egg&facet=facet_product_type%3AEggs%7C%7Cfood_form%3AWhole%7C%7Cnumber_of_pieces%3A12%7C%7Cnumber_of_pieces%3A18'
-    lat = 38.0372329
-    long = -78.5706529
-    scraper = Scraper(url, lat, long)
-    scraper.scrape()
-    print(scraper.read_walmart())
-    with open ('output.html', 'w', encoding='utf-8') as f:
-        f.write(scraper.return_soup().prettify())
-
-if __name__ == '__main__':
-    main()
