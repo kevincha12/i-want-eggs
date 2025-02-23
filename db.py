@@ -69,7 +69,7 @@ class DBHandler:
         if self.curs.closed:
             raise TransactionNotOpenError
         self.curs.execute('''
-                        DROP TABLE IF EXISTS stores, eggs, store_egg_relaton
+                        DROP TABLE IF EXISTS stores, eggs, store_egg_relation
                           ''')
     
     def add_store(self, address, city, zipcode, longitude, latitude):
