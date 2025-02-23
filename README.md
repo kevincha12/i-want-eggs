@@ -33,3 +33,9 @@ And that should be enough to run all the files!
 
 ## Contact Us
 This project was completed for WICS hack downtown 2025 by co-authors Andy Zeng and Kevin Cha. If you are curious about the design choices or further expansion of this project, please contact us at xxd8nb@virginia.edu or hpb2gv@virginia.edu respectively.
+
+## Issues
+Due to time constraints, there were a couple of shortcuts made for this project:
+
+1. Instead of being able to request API keys for multiple retailers, we didn't have time for approvals so we stuck to scraping walmart + target.
+2. Target is slow to dynamically load their products via javascript, so while the functionality is semi-in place to scrape + handle target elements it could not be completed in the time constraints of the hackathon.
