@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Address Search</title>
+  <title>Search for a Route</title>
   <!-- Load the Google Maps API with the Places library -->
   <script src="https://maps.googleapis.com/maps/api/js?key={{ api_key }}&libraries=places"></script>
   <script>
@@ -12,7 +12,6 @@
     function initialize() {
       var input = document.getElementById('address');
       var autocomplete = new google.maps.places.Autocomplete(input, { types: ['geocode'] });
-
       autocomplete.addListener('place_changed', function() {
         var place = autocomplete.getPlace();
         if (!place.geometry) {
@@ -23,21 +22,34 @@
         selectedLng = place.geometry.location.lng();
         console.log('Selected place:', place);
         console.log('Latitude:', selectedLat, 'Longitude:', selectedLng);
+        checkFields(); // Check if both fields are filled
       });
     }
 
-    function displayCoords() {
-      var coordsDiv = document.getElementById('coords');
-      if (selectedLat && selectedLng) {
-        coordsDiv.innerHTML = "<p>Latitude: " + selectedLat + "</p><p>Longitude: " + selectedLng + "</p>";
-        // Redirect to the map page with coordinates as query parameters
-        window.location.href = "/map/?lat=" + selectedLat + "&lng=" + selectedLng;
+    // Check that both the coordinates and mileage are provided.
+    function checkFields() {
+      var mileage = document.getElementById("mileage").value;
+      var btn = document.getElementById("routeButton");
+      // Only enable the button if coordinates are set and mileage is non-empty.
+      if (selectedLat !== null && selectedLng !== null && mileage !== "") {
+          btn.disabled = false;
       } else {
-        coordsDiv.innerHTML = "<p>No coordinates available. Please select an address.</p>";
+          btn.disabled = true;
       }
     }
 
-    // Initialize autocomplete when the window loads
+    // Called when the button is clicked.
+    function redirectToRoute() {
+      var mileage = document.getElementById("mileage").value;
+      if (selectedLat !== null && selectedLng !== null && mileage) {
+        // Redirect to the route view with the origin and mileage as query parameters.
+        window.location.href = "/route/?origin=" + selectedLat + "," + selectedLng + "&mileage=" + mileage;
+      } else {
+        alert("Please fill in all fields.");
+      }
+    }
+
+    // Initialize autocomplete on window load.
     google.maps.event.addDomListener(window, 'load', initialize);
   </script>
 </head>
@@ -45,7 +57,9 @@
   <h3>Search for an Address</h3>
   <input id="address" type="text" placeholder="Enter an address" style="width: 300px; height: 30px; font-size: 16px;">
   <br><br>
-  <button onclick="displayCoords()">Show Coordinates and View Map</button>
+  <input id="mileage" type="number" placeholder="Enter mileage" style="width: 150px; height: 30px; font-size: 16px;" oninput="checkFields()">
+  <br><br>
+  <button id="routeButton" onclick="redirectToRoute()" disabled>Get Route and View Map</button>
   <div id="coords" style="margin-top:20px; font-size:16px;"></div>
 </body>
 </html>

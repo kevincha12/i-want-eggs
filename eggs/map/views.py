@@ -1,38 +1,78 @@
 import os
+import requests
 import folium
-from django.conf import settings
-from django.shortcuts import render
+import polyline
 from dotenv import load_dotenv
 
+from django.shortcuts import render
+from django.conf import settings
+
 load_dotenv()
-API_KEY = os.getenv("ROUTE_API_KEY")
+api_key = os.getenv("ROUTE_API_KEY")
 
-# Create your views here.
+
 def home_view(request):
-    print(API_KEY)
-    return render(request, "home.html", {"api_key": API_KEY})
-
-def map_view(request):
     """
-    Renders a Folium map. If coordinates are passed as GET parameters,
-    the map will be centered at the given latitude and longitude.
-    Otherwise, it falls back to a default location.
+    Render the home page with the Google Maps autocomplete search box.
+    The API key is passed to the template for loading the Google Maps API.
     """
-    try:
-        lat = float(request.GET.get("lat", 37.7749))  # default: San Francisco
-        lng = float(request.GET.get("lng", -122.4194))
-    except (ValueError, TypeError):
-        lat, lng = 37.7749, -122.4194
+    return render(request, "home.html", {"api_key": api_key})
 
-    # Create a Folium map centered on the chosen (or default) coordinates
-    m = folium.Map(location=[lat, lng], zoom_start=12)
+
+def route_view(request):
+    """
+    Use the origin coordinates from the Google search on the home page to call the Google Directions API.
+    Draw the route from the selected origin to the fixed destination and display it using a Folium map.
+    Also, retrieve the mileage value for later calculations.
+    """
+    # Get the origin from the GET parameters (expected format: "lat,lng")
+    origin = request.GET.get("origin")
+    mileage = request.GET.get("mileage")
+    if not origin or not mileage:
+        return render(request, "error.html", {"message": "Origin or mileage not provided."})
+
+    destination = "40.730610,-73.935242"  # fixed destination
+
+    endpoint = "https://maps.googleapis.com/maps/api/directions/json"
+    params = {
+        "origin": origin,
+        "destination": destination,
+        "key": api_key,
+    }
+    response = requests.get(endpoint, params=params)
+
+    if response.status_code == 200:
+        data = response.json()
+        try:
+            overview_polyline = data["routes"][0]["overview_polyline"]["points"]
+        except (KeyError, IndexError):
+            return render(request, "error.html", {"message": "No route found for the given origin."})
+    else:
+        return render(request, "error.html", {"message": f"Error fetching route: {response.status_code} {response.text}"})
+
+    decoded_points = polyline.decode(overview_polyline)
+    start_lat, start_lng = decoded_points[0]
+    end_lat, end_lng = decoded_points[-1]
+
+    m = folium.Map(location=[start_lat, start_lng], zoom_start=12)
+    folium.PolyLine(decoded_points, color="blue", weight=5, opacity=0.8).add_to(m)
     folium.Marker(
-        location=[lat, lng],
-        popup="Selected Location",
-        icon=folium.Icon(color="blue")
+        location=[start_lat, start_lng],
+        popup="Start",
+        icon=folium.Icon(color="green")
+    ).add_to(m)
+    folium.Marker(
+        location=[end_lat, end_lng],
+        popup="Finish",
+        icon=folium.Icon(color="red")
     ).add_to(m)
 
-    # Get the HTML representation of the map
     map_html = m._repr_html_()
 
+    # Now the mileage value is accessible as the variable `mileage`
+    # You can use it for further calculations later.
+    print("Mileage received:", mileage)  # or perform additional processing
+
     return render(request, "map.html", {"map": map_html})
+
+
