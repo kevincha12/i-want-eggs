@@ -5,9 +5,3 @@ venv/
 *.html
 
 *.json
-
-
-testing.py
-test.py
-test_get_coord.py
-test_get_coord2.py
